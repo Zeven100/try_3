@@ -189,14 +189,19 @@ from .models import Room, Student, Warden, Hostel , Wallet
 def warden_dashboard(request):
     if not request.session.get('warden_id'):
         return redirect('warden_signin')  # Redirect to sign in if not logged in
-
+    
     warden = Warden.objects.get(warden_id=request.session['warden_id'])
     available_rooms = Room.objects.filter(hostel=warden.hostel, occupancy_status=False)
-    
+    print(warden.warden_id)
     return render(request, 'warden/warden_dashboard.html', {
         'warden_name': warden.name,
         'available_rooms': available_rooms,
     })
+
+def warden_logout(request):
+    # Clear the session data
+    request.session.flush()  # This will remove all session data
+    return redirect('warden_signin') 
 
 def add_student(request):
     if request.method == 'POST':
@@ -292,6 +297,7 @@ def change_password(request):
     return render(request, 'warden/change_password.html', {'warden': warden})
 from decimal import Decimal , InvalidOperation  
 def student_dashboard(request):
+    student_name = request.session.get('student_name')
     student_id = request.session.get('student_id')
     wallet_info = None
 
@@ -300,7 +306,8 @@ def student_dashboard(request):
         wallet_info = Wallet.objects.filter(student_id=student_id).first()  # Get wallet for the current student
 
     return render(request, 'student/student_dashboard.html', {
-        'wallet_info': wallet_info,  # Pass wallet info to the template
+        'wallet_info': wallet_info,
+        'student_name' : student_name
     })
 
 def view_transactions(request):

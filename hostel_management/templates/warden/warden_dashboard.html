@@ -1,19 +1,36 @@
-<h1>Welcome, {{ warden_name }}</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warden Dashboard</title>
+    <!-- Add your CSS links here -->
+</head>
+<body>
+    <h1>Welcome, {{ warden_name }}</h1>
 
-<div class="sidebar">
-    <h2>Options</h2>
-    <ul>
-        <li><a href="{% url 'add_student' %}">Add New Student</a></li>
-        <li><a href="{% url 'view_student_info' %}">View Student Information</a></li>
-        <li><a href="{% url 'change_password' %}">Change Password</a></li>  <!-- New option -->
-    </ul>
-</div>
+    <div class="sidebar">
+        <h2>Options</h2>
+        <ul>
+            <li><a href="{% url 'add_student' %}">Add New Student</a></li>
+            <li><a href="{% url 'view_student_info' %}">View Student Information</a></li>
+            <li><a href="{% url 'change_password' %}">Change Password</a></li>  <!-- New option -->
+        </ul>
+    </div>
 
-<div class="main-content">
-    <h2>Available Rooms</h2>
-    <ul>
-        {% for room in available_rooms %}
-            <li>Room ID: {{ room.room_id }}</li>
-        {% endfor %}
-    </ul>
-</div>
+    <div class="main-content">
+        <h2>Available Rooms</h2>
+        <ul>
+            {% for room in available_rooms %}
+                <li>Room ID: {{ room.room_id }}</li>
+            {% endfor %}
+        </ul>
+
+        <!-- Log Out Button -->
+        <form action="{% url 'warden_logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit">Log Out</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 # hostel_management/urls.py
 
 from django.urls import path, include
-from .views import home , admin_dashboard, add_dummy_money , make_payment,view_transactions,  student_dashboard, change_password,warden_dashboard , add_student , view_student_info # Import the home view or other relevant views
+from .views import home , admin_dashboard, warden_logout, add_dummy_money , make_payment,view_transactions,  student_dashboard, change_password,warden_dashboard , add_student , view_student_info # Import the home view or other relevant views
 
 urlpatterns = [
     path('', home, name='home'),                       # Home page
@@ -15,4 +15,5 @@ urlpatterns = [
     path('view_transactions/', view_transactions, name='view_transactions'),
     path('make_payment/', make_payment, name='make_payment'),
     path('add_dummy_money/', add_dummy_money, name='add_dummy_money'),
+    path('warden_logout/', warden_logout, name='warden_logout')
 ]
