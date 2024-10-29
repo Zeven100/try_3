@@ -1,0 +1,17 @@
+<!-- templates/student/student_dashboard.html -->
+
+<h2>Welcome, {{ student_name }}!</h2>
+<ul>
+    <!-- Other links -->
+    <li><a href="{% url 'make_payment' %}">Make Payment</a></li>
+    <li><a href="{% url 'view_transactions' %}">View Transactions</a></li>
+    <li><a href="{% url 'add_dummy_money' %}">Add Dummy Money</a></li>  <!-- Link to Add Dummy Money -->
+    <li><a href="{% url 'logout' %}">Logout</a></li>
+</ul>
+
+{% if wallet_info %}
+    <h3>Wallet Information</h3>
+    <p>Current Balance: {{ wallet_info.balance }} </p>  <!-- Display current balance -->
+{% else %}
+    <p>No wallet information available.</p>
+{% endif %}

@@ -13,14 +13,26 @@ def home(request):
 # Sign-in view for students
 def student_signin(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None and user.groups.filter(name='Student').exists():
-            login(request, user)
-            return redirect('student_dashboard')  # Redirect to student's dashboard
-        else:
-            messages.error(request, "Invalid credentials or not a student.")
+        student_id = request.POST.get('student_id')
+        password = request.POST.get('password')
+
+        try:
+            # Check if a student with the provided ID exists
+            student = Student.objects.get(student_id=student_id)
+
+            # Verify password
+            if student.password == password:
+                # Store student data in the session
+                request.session['student_name'] = student.name
+                request.session['student_id'] = student.student_id
+                
+                # Redirect to the student dashboard
+                return redirect('student_dashboard')
+            else:
+                messages.error(request, "Invalid credentials.")
+        except Student.DoesNotExist:
+            messages.error(request, "Invalid credentials.")
+    
     return render(request, 'auth/student_signin.html')
 
 # Sign-in view for wardens
@@ -38,26 +50,34 @@ def warden_signin(request):
 
 from django.http import HttpResponseRedirect  # Import HttpResponseRedirect
 
-# Sign-in view for admins
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.urls import reverse
+from .models import Admin
+
 def admin_signin(request):
     if request.method == 'POST':
-        admin_id = request.POST['admin_id']
-        password = request.POST['password']
+        admin_id = request.POST.get('admin_id')
+        password = request.POST.get('password')
 
         try:
             admin = Admin.objects.get(Admin_id=admin_id)
-
-            # Verify the password
-            if admin.password == password:  
+            if admin.password == password:
                 request.session['admin_name'] = admin.name
                 request.session['admin_id'] = admin.Admin_id
-                
-                # Redirect to the absolute URL
-                return HttpResponseRedirect('http://localhost:8000/admin_dashboard')  
+
+                # Debug message to check session data
+                print("Admin signed in:", request.session['admin_name'], request.session['admin_id'])
+
+                # Redirect using reverse to ensure proper URL resolution
+                return redirect(reverse('admin_dashboard'))
             else:
                 messages.error(request, "Invalid credentials.")
         except Admin.DoesNotExist:
             messages.error(request, "Invalid credentials.")
+
+    # Debug message to check redirection cause
+    print("Redirecting back to sign-in due to invalid credentials or session")
 
     return render(request, 'auth/admin_signin.html')
 
@@ -85,13 +105,22 @@ def admin_signup(request):
     return render(request, 'auth/admin_signup.html')
 
 def admin_dashboard(request):
-    if not request.session.get('admin_id'):
+    # Check if the admin is logged in by verifying the session
+    admin_id = request.session.get('admin_id')
+    admin_name = request.session.get('admin_name')
+
+    if not admin_id:
+        # Log the reason for redirection
+        print("Admin ID not found in session. Redirecting to admin_signin.")
+        messages.error(request, "You need to sign in to access the admin dashboard.")
         return redirect('admin_signin')  # Redirect to sign in if not logged in
 
-    admin_name = request.session.get('admin_name')
+    # Admin is logged in, proceed to retrieve admin details
+    print(f"Admin {admin_name} (ID: {admin_id}) accessed the dashboard.")
     hostels = Hostel.objects.all()  # Retrieve all hostels
 
     if request.method == 'POST':
+        # Handling the addition of a new hostel
         if 'add_hostel' in request.POST:
             hostel_id = request.POST.get('hostel_id')  # Get hostel_id from form
             hostel_name = request.POST.get('hostel_name')
@@ -105,7 +134,7 @@ def admin_dashboard(request):
             for _ in range(total_rooms):
                 Room.objects.create(hostel=new_hostel)
 
-        # Updated part of the admin_dashboard view
+        # Handling the addition of a new warden
         if 'add_warden' in request.POST:
             warden_id = request.POST.get('warden_id')  # Get warden_id from form
             warden_name = request.POST.get('warden_name')
@@ -126,7 +155,6 @@ def admin_dashboard(request):
         'hostels': hostels,
         'admin_name': admin_name
     })
-
 
 
 def warden_signin(request):
@@ -155,7 +183,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .models import Room, Student, Warden, Hostel
 
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import Room, Student, Warden, Hostel
+from .models import Room, Student, Warden, Hostel , Wallet
 
 # .....
 def warden_dashboard(request):
@@ -181,7 +209,7 @@ def add_student(request):
 
         # Create new student
         hostel = Hostel.objects.get(hostel_id=hostel_id)
-        new_student = Student(student_id=student_id, name=student_name, mobile_number=mobile_number, hostel=hostel)
+        new_student = Student(student_id=student_id, name=student_name, mobile_number=mobile_number, hostel=hostel, password=dummy_password)
         new_student.save()
 
         # Update room occupancy status
@@ -190,7 +218,8 @@ def add_student(request):
         room.occupancy_status = True
         room.save()
 
-        # You can store the dummy password in a way that suits your needs, for example in a related model or handle it separately.
+        # Create a wallet for the new student with a balance of 0.00
+        Wallet.objects.create(student=new_student, balance=0.00)
 
         return redirect('warden_dashboard')
 
@@ -202,7 +231,6 @@ def add_student(request):
         'available_rooms': available_rooms,
         'warden': warden,
     })
-
 
 from django.http import HttpResponse
 
@@ -241,3 +269,106 @@ def view_student_info(request):
         })
 
     return render(request, 'warden/view_student.html')
+
+def change_password(request):
+    if not request.session.get('warden_id'):
+        return redirect('warden_signin')  # Redirect to sign in if not logged in
+
+    warden = Warden.objects.get(warden_id=request.session['warden_id'])
+
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+
+        # Here, you would typically verify the current password
+        if current_password == warden.password:  # Adjust this to use hashed passwords if applicable
+            warden.password = new_password  # Update the password
+            warden.save()
+            messages.success(request, "Your password has been changed successfully.")
+            return redirect('warden_dashboard')
+        else:
+            messages.error(request, "Current password is incorrect.")
+
+    return render(request, 'warden/change_password.html', {'warden': warden})
+from decimal import Decimal , InvalidOperation  
+def student_dashboard(request):
+    student_id = request.session.get('student_id')
+    wallet_info = None
+
+    if student_id:
+        # Fetch wallet information for the student
+        wallet_info = Wallet.objects.filter(student_id=student_id).first()  # Get wallet for the current student
+
+    return render(request, 'student/student_dashboard.html', {
+        'wallet_info': wallet_info,  # Pass wallet info to the template
+    })
+
+def view_transactions(request):
+    student_id = request.session.get('student_id')
+    if not student_id:
+        return redirect('student_signin')  # Redirect if not logged in
+
+    # Get the student's transactions
+    transactions = Transaction.objects.filter(student_id=student_id)
+
+    return render(request, 'student/view_transactions.html', {'transactions': transactions})
+
+def make_payment(request):
+    if request.method == 'POST':
+        amount = request.POST['amount']
+        student_id = request.session.get('student_id')
+
+        if student_id:
+            # Fetch the student's wallet balance
+            try:
+                wallet = Wallet.objects.get(student_id=student_id)
+                current_balance = wallet.balance
+                amount = Decimal(amount)  # Convert to Decimal for comparison
+
+                # Check if the student has enough balance
+                if amount <= current_balance:
+                    # Process the payment
+                    transaction = Transaction(student_id=student_id, amount=amount, status='Completed')
+                    transaction.save()
+
+                    # Deduct the amount from the wallet balance
+                    wallet.balance -= amount
+                    wallet.save()
+
+                    messages.success(request, "Payment made successfully!")
+                    return redirect('student_dashboard')  # Redirect after successful payment
+                else:
+                    messages.error(request, "Insufficient balance for this transaction.")
+            except Wallet.DoesNotExist:
+                messages.error(request, "Wallet not found. Please contact support.")
+        else:
+            return redirect('student_signin')  # Redirect if not logged in
+
+    return render(request, 'student/make_payment.html')
+
+# views.py
+
+def add_dummy_money(request):
+    if request.method == 'POST':
+        amount = request.POST.get('amount', 0)
+        student_id = request.session.get('student_id')
+
+        if student_id:
+            # Ensure the amount is a valid decimal number
+            try:
+                amount = Decimal(amount)  # Convert to Decimal
+                if amount > 0:  # Validate that the amount is positive
+                    wallet, created = Wallet.objects.get_or_create(student_id=student_id)
+                    wallet.balance += amount  # Add the amount to the wallet balance
+                    wallet.save()
+
+                    messages.success(request, "Dummy money added successfully!")
+                    return redirect('student_dashboard')
+                else:
+                    messages.error(request, "Please enter a positive amount.")
+            except (ValueError, InvalidOperation):
+                messages.error(request, "Invalid amount entered.")
+        else:
+            return redirect('student_signin')  # Redirect if not logged in
+
+    return render(request, 'student/add_dummy_money.html')

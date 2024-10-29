@@ -1,0 +1,20 @@
+<!-- templates/student/add_dummy_money.html -->
+
+<h2>Add Dummy Money</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <label for="amount">Enter Amount:</label>
+    <input type="number" id="amount" name="amount" required>
+    <button type="submit">Add Money</button>
+</form>
+
+<a href="{% url 'student_dashboard' %}">Back to Dashboard</a>
+
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}

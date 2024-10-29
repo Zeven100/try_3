@@ -1,4 +1,5 @@
-<!-- hostel_management/templates/auth/student_signin.html -->
+<!-- templates/auth/student_signin.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,16 +8,29 @@
     <title>Student Sign In</title>
 </head>
 <body>
-    <h1>Student Sign In</h1>
-    <form method="post">
+    <h2>Student Sign In</h2>
+
+    <!-- Display error messages -->
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li style="color: red;">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- Sign-in form -->
+    <form method="post" action="{% url 'student_signin' %}">
         {% csrf_token %}
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <br>
+        <label for="student_id">Student ID:</label>
+        <input type="text" id="student_id" name="student_id" required><br><br>
+
         <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
+        <input type="password" id="password" name="password" required><br><br>
+
         <button type="submit">Sign In</button>
     </form>
+
+    <p><a href="{% url 'home' %}">Back to Home</a></p>
 </body>
 </html>

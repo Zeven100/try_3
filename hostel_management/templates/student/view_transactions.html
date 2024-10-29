@@ -1,0 +1,32 @@
+<!-- templates/student/view_transactions.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Transactions</title>
+</head>
+<body>
+    <h2>Your Transactions</h2>
+
+    <table>
+        <tr>
+            <th>Transaction ID</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Status</th>
+        </tr>
+        {% for transaction in transactions %}
+        <tr>
+            <td>{{ transaction.transaction_id }}</td>
+            <td>{{ transaction.amount }}</td>
+            <td>{{ transaction.date }}</td>
+            <td>{{ transaction.status }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="{% url 'student_dashboard' %}">Back to Dashboard</a>
+</body>
+</html>
