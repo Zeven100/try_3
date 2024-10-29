@@ -2,3 +2,43 @@
 <p>Name: {{ student.name }}</p>
 <p>Mobile Number: {{ student.mobile_number }}</p>
 <p>Hostel: {{ student.hostel.name }}</p>
+
+<h3>Transactions</h3>
+<table>
+    <tr>
+        <th>Transaction ID</th>
+        <th>Amount</th>
+        <th>Date</th>
+        <th>Status</th>
+    </tr>
+    {% for transaction in transactions %}
+    <tr>
+        <td>{{ transaction.transaction_id }}</td>
+        <td>{{ transaction.amount }}</td>
+        <td>{{ transaction.date }}</td>
+        <td>{{ transaction.status }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="4">No transactions found for this student.</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Change Room Number</h3>
+<form method="POST">
+    {% csrf_token %}
+    <label for="new_room_id">Select New Room:</label>
+    <select name="new_room_id" id="new_room_id" required>
+        {% for room in rooms %}
+        <option value="{{ room.room_id }}">{{ room.room_id }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" name="change_room">Change Room</button>
+</form>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-info">{{ message }}</div>
+    {% endfor %}
+{% endif %}

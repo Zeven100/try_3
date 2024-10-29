@@ -206,14 +206,38 @@ def add_student(request):
 
 from django.http import HttpResponse
 
+from django.shortcuts import render, get_object_or_404
+from .models import Student, Transaction
+
 def view_student_info(request):
     if request.method == 'POST':
         student_id = request.POST.get('student_id')
-        try:
-            student = Student.objects.get(student_id=student_id)
-        except Student.DoesNotExist:
-            return HttpResponse("Student not found.")
+        student = get_object_or_404(Student, student_id=student_id)
 
-        return render(request, 'warden/view_student_info.html', {'student': student})
+        # Fetch the transactions for the student
+        transactions = Transaction.objects.filter(student=student)
+
+        if 'change_room' in request.POST:
+            new_room_id = request.POST.get('new_room_id')
+            try:
+                new_room = Room.objects.get(room_id=new_room_id, occupancy_status=False)
+                # Update the student's room
+                if student.room:
+                    # Free the current room if occupied
+                    student.room.occupancy_status = False
+                    student.room.save()
+                student.room = new_room
+                student.room.occupancy_status = True  # Mark new room as occupied
+                student.save()
+                new_room.save()  # Save the new room
+                messages.success(request, f"Room changed to {new_room.room_id} successfully.")
+            except Room.DoesNotExist:
+                messages.error(request, "Room does not exist or is already occupied.")
+        
+        return render(request, 'warden/view_student_info.html', {
+            'student': student,
+            'transactions': transactions,
+            'rooms': Room.objects.filter(hostel=student.hostel, occupancy_status=False)  # Fetch available rooms
+        })
 
     return render(request, 'warden/view_student.html')
