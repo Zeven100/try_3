@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 15px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar h2 {
+            font-size: 18px;
+        }
+        .sidebar a {
+            display: block;
+            margin: 10px 0;
+            text-decoration: none;
+            color: #333;
+        }
+        .sidebar a:hover {
+            background-color: #ddd;
+        }
+        .content {
+            padding: 20px;
+            flex-grow: 1;
+        }
+        .form-section {
+            display: none; /* Hide the form sections initially */
+        }
+    </style>
+    <script>
+        function showSection(sectionId) {
+            // Hide all form sections
+            var sections = document.querySelectorAll('.form-section');
+            sections.forEach(function(section) {
+                section.style.display = 'none';
+            });
+
+            // Show the selected section
+            var selectedSection = document.getElementById(sectionId);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Admin Options</h2>
+        <a href="javascript:void(0);" onclick="showSection('add_hostel')">Add Hostel</a>
+        <a href="javascript:void(0);" onclick="showSection('add_warden')">Add Warden</a>
+    </div>
+    
+    <div class="content">
+        <h1>Welcome, {{ admin_name }}</h1>
+        
+        <div id="add_hostel" class="form-section">
+          <h2>Manage Hostels</h2>
+          <form method="POST">
+              {% csrf_token %}
+              <label for="hostel_id">Hostel ID:</label>
+              <input type="text" id="hostel_id" name="hostel_id" required><br><br>
+
+              <label for="hostel_name">Hostel Name:</label>
+              <input type="text" id="hostel_name" name="hostel_name" required><br><br>
+          
+              <label for="total_rooms">Total Rooms:</label>
+              <input type="number" id="total_rooms" name="total_rooms" required><br><br>
+          
+              <button type="submit" name="add_hostel">Add Hostel</button>
+          </form>
+        </div>
+
+        <div id="add_warden" class="form-section">
+            <h2>Add Warden</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <label for="warden_name">Warden Name:</label>
+                <input type="text" id="warden_name" name="warden_name" required><br><br>
+
+                <label for="mobile_number">Mobile Number:</label>
+                <input type="text" id="mobile_number" name="mobile_number" required><br><br>
+
+                <label for="hostel_id">Hostel ID:</label>
+                <input type="text" id="hostel_id" name="hostel_id" required><br><br>
+
+                <label for="dummy_password">Dummy Password:</label>
+                <input type="password" id="dummy_password" name="dummy_password" required><br><br>
+
+                <button type="submit" name="add_warden">Add Warden</button>
+            </form>
+        </div>
+
+        <h2>Existing Hostels</h2>
+        <ul>
+            {% for hostel in hostels %}
+                <li>{{ hostel.name }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

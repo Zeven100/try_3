@@ -1,0 +1,21 @@
+<!-- hostel_management/templates/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+</head>
+<body>
+    <h1>Welcome to the Hostel Management System</h1>
+    <div>
+        <h2>Select your role:</h2>
+        <ul>
+            <li><a href="{% url 'student_signin' %}">Student Sign In</a></li>
+            <li><a href="{% url 'warden_signin' %}">Warden Sign In</a></li>
+            <li><a href="{% url 'admin_signin' %}">Admin Sign In</a></li>
+            <li><a href="{% url 'admin_signup' %}">Admin Sign Up</a></li>  <!-- Admin Signup Link -->
+        </ul>
+    </div>
+</body>
+</html>
