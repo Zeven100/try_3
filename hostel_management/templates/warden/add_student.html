@@ -1,0 +1,29 @@
+<h2>Add New Student</h2>
+<form method="POST">
+    {% csrf_token %}
+    
+    <label for="student_id">Student ID:</label>
+    <input type="text" id="student_id" name="student_id" required><br><br>
+
+    <label for="student_name">Student Name:</label>
+    <input type="text" id="student_name" name="student_name" required><br><br>
+
+    <label for="mobile_number">Mobile Number:</label>
+    <input type="text" id="mobile_number" name="mobile_number" required><br><br>
+
+    <label for="dummy_password">Dummy Password:</label>
+    <input type="text" id="dummy_password" name="dummy_password" required><br><br>  <!-- Add dummy password field -->
+
+    <label for="room_id">Select Room:</label>
+    <select id="room_id" name="room_id" required>
+        {% for room in available_rooms %}
+            <option value="{{ room.room_id }}">{{ room.room_id }}</option>
+        {% empty %}
+            <option value="">No available rooms</option>
+        {% endfor %}
+    </select><br><br>
+
+    <input type="hidden" name="hostel_id" value="{{ warden.hostel.hostel_id }}">
+
+    <button type="submit">Add Student</button>
+</form>

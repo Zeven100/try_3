@@ -50,14 +50,18 @@ class Room(models.Model):
     def __str__(self):
         return f"Room {self.room_id} in {self.hostel.name}"
 
+from django.db import models
+
 class Student(models.Model):
     student_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     mobile_number = models.CharField(max_length=15)
     hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name='students')
+    password = models.CharField(max_length=100, null=True)  # Make password nullable
 
     def __str__(self):
         return f"Student {self.name} ({self.student_id})"
+
 
 class Transaction(models.Model):
     transaction_id = models.AutoField(primary_key=True)

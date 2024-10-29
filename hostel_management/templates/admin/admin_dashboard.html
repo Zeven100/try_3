@@ -79,24 +79,28 @@
         </div>
 
         <div id="add_warden" class="form-section">
-            <h2>Add Warden</h2>
-            <form method="POST">
-                {% csrf_token %}
-                <label for="warden_name">Warden Name:</label>
-                <input type="text" id="warden_name" name="warden_name" required><br><br>
-
-                <label for="mobile_number">Mobile Number:</label>
-                <input type="text" id="mobile_number" name="mobile_number" required><br><br>
-
-                <label for="hostel_id">Hostel ID:</label>
-                <input type="text" id="hostel_id" name="hostel_id" required><br><br>
-
-                <label for="dummy_password">Dummy Password:</label>
-                <input type="password" id="dummy_password" name="dummy_password" required><br><br>
-
-                <button type="submit" name="add_warden">Add Warden</button>
-            </form>
-        </div>
+          <h2>Add Warden</h2>
+          <form method="POST">
+              {% csrf_token %}
+              <label for="warden_id">Warden ID:</label>
+              <input type="text" id="warden_id" name="warden_id" required><br><br>
+      
+              <label for="warden_name">Warden Name:</label>
+              <input type="text" id="warden_name" name="warden_name" required><br><br>
+      
+              <label for="mobile_number">Mobile Number:</label>
+              <input type="text" id="mobile_number" name="mobile_number" required><br><br>
+      
+              <label for="hostel_id">Hostel ID:</label>
+              <input type="text" id="hostel_id" name="hostel_id" required><br><br>
+      
+              <label for="dummy_password">Dummy Password:</label>
+              <input type="password" id="dummy_password" name="dummy_password" required><br><br>
+      
+              <button type="submit" name="add_warden">Add Warden</button>
+          </form>
+      </div>
+      
 
         <h2>Existing Hostels</h2>
         <ul>

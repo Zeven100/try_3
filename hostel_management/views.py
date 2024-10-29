@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect , get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages  # To display messages
 from django import forms  # Import forms
-from .models import Hostel, Warden , Admin , Room  # Ensure you import the Hostel and Warden models
+from .models import Hostel, Warden , Admin , Room , Student # Ensure you import the Hostel and Warden models
 from django.contrib.auth.hashers import make_password
 
 # Home view
@@ -105,16 +105,19 @@ def admin_dashboard(request):
             for _ in range(total_rooms):
                 Room.objects.create(hostel=new_hostel)
 
+        # Updated part of the admin_dashboard view
         if 'add_warden' in request.POST:
+            warden_id = request.POST.get('warden_id')  # Get warden_id from form
             warden_name = request.POST.get('warden_name')
             mobile_number = request.POST.get('mobile_number')
             hostel_id = request.POST.get('hostel_id')
             dummy_password = request.POST.get('dummy_password')
 
             new_warden = Warden(
+                warden_id=warden_id,  # Set the warden_id here
                 name=warden_name,
                 mobile_no=mobile_number,
-                password=make_password(dummy_password),
+                password=dummy_password,  # Save the password directly without hashing
                 hostel_id=hostel_id
             )
             new_warden.save()
@@ -126,3 +129,91 @@ def admin_dashboard(request):
 
 
 
+def warden_signin(request):
+    if request.method == 'POST':
+        warden_id = request.POST['warden_id']
+        password = request.POST['password']
+
+        try:
+            warden = Warden.objects.get(warden_id=warden_id)
+
+            # Verify the password
+            if warden.password == password:  # You may want to hash and verify instead
+                request.session['warden_name'] = warden.name
+                request.session['warden_id'] = warden.warden_id
+                
+                # Redirect to the warden dashboard
+                return HttpResponseRedirect('http://localhost:8000/warden_dashboard')  
+            else:
+                messages.error(request, "Invalid credentials.")
+        except Warden.DoesNotExist:
+            messages.error(request, "Invalid credentials.")
+
+    return render(request, 'auth/warden_signin.html')
+
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import Room, Student, Warden, Hostel
+
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import Room, Student, Warden, Hostel
+
+# .....
+def warden_dashboard(request):
+    if not request.session.get('warden_id'):
+        return redirect('warden_signin')  # Redirect to sign in if not logged in
+
+    warden = Warden.objects.get(warden_id=request.session['warden_id'])
+    available_rooms = Room.objects.filter(hostel=warden.hostel, occupancy_status=False)
+    
+    return render(request, 'warden/warden_dashboard.html', {
+        'warden_name': warden.name,
+        'available_rooms': available_rooms,
+    })
+
+def add_student(request):
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        student_name = request.POST.get('student_name')
+        mobile_number = request.POST.get('mobile_number')
+        room_id = request.POST.get('room_id')
+        dummy_password = request.POST.get('dummy_password')  # Get the dummy password
+        hostel_id = request.POST.get('hostel_id')
+
+        # Create new student
+        hostel = Hostel.objects.get(hostel_id=hostel_id)
+        new_student = Student(student_id=student_id, name=student_name, mobile_number=mobile_number, hostel=hostel)
+        new_student.save()
+
+        # Update room occupancy status
+        room = Room.objects.get(room_id=room_id)
+        room.student = new_student
+        room.occupancy_status = True
+        room.save()
+
+        # You can store the dummy password in a way that suits your needs, for example in a related model or handle it separately.
+
+        return redirect('warden_dashboard')
+
+    # For GET request, populate available rooms
+    warden = Warden.objects.get(warden_id=request.session['warden_id'])
+    available_rooms = Room.objects.filter(hostel=warden.hostel, occupancy_status=False)
+
+    return render(request, 'warden/add_student.html', {
+        'available_rooms': available_rooms,
+        'warden': warden,
+    })
+
+
+from django.http import HttpResponse
+
+def view_student_info(request):
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        try:
+            student = Student.objects.get(student_id=student_id)
+        except Student.DoesNotExist:
+            return HttpResponse("Student not found.")
+
+        return render(request, 'warden/view_student_info.html', {'student': student})
+
+    return render(request, 'warden/view_student.html')
