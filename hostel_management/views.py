@@ -242,6 +242,13 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from .models import Student, Transaction
 
+from django.db import transaction
+from django.contrib import messages
+
+from django.db import transaction
+from django.shortcuts import render, get_object_or_404
+from django.contrib import messages
+
 def view_student_info(request):
     if request.method == 'POST':
         student_id = request.POST.get('student_id')
@@ -253,20 +260,35 @@ def view_student_info(request):
         if 'change_room' in request.POST:
             new_room_id = request.POST.get('new_room_id')
             try:
-                new_room = Room.objects.get(room_id=new_room_id, occupancy_status=False)
-                # Update the student's room
-                if student.room:
+                # Ensure atomic updates
+                with transaction.atomic():
+                    # Fetch the new room
+                    new_room = Room.objects.get(
+                        room_id=new_room_id,
+                        hostel=student.hostel,  # Match the hostel
+                        occupancy_status=False  # Ensure it's available
+                    )
+
                     # Free the current room if occupied
-                    student.room.occupancy_status = False
-                    student.room.save()
-                student.room = new_room
-                student.room.occupancy_status = True  # Mark new room as occupied
-                student.save()
-                new_room.save()  # Save the new room
-                messages.success(request, f"Room changed to {new_room.room_id} successfully.")
+                    if student.room:
+                        current_room = student.room
+                        current_room.student = None  # Unassign the student
+                        current_room.occupancy_status = False
+                        current_room.save()
+
+                    # Assign the new room to the student
+                    student.room = new_room
+                    new_room.student = student
+                    new_room.occupancy_status = True
+                    new_room.save()
+                    student.save()
+
+                    messages.success(request, f"Room changed to {new_room.room_id} successfully.")
             except Room.DoesNotExist:
-                messages.error(request, "Room does not exist or is already occupied.")
-        
+                messages.error(request, "Selected room does not exist or is already occupied.")
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+
         return render(request, 'warden/view_student_info.html', {
             'student': student,
             'transactions': transactions,
@@ -274,6 +296,7 @@ def view_student_info(request):
         })
 
     return render(request, 'warden/view_student.html')
+
 
 def change_password(request):
     if not request.session.get('warden_id'):

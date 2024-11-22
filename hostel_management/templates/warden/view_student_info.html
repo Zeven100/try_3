@@ -28,6 +28,8 @@
 <h3>Change Room Number</h3>
 <form method="POST">
     {% csrf_token %}
+    <!-- Hidden input to pass the student_id -->
+    <input type="hidden" name="student_id" value="{{ student.student_id }}">
     <label for="new_room_id">Select New Room:</label>
     <select name="new_room_id" id="new_room_id" required>
         {% for room in rooms %}
